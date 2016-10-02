@@ -1,6 +1,6 @@
 <?php
 
-namespace EnderStats;
+namespace EnderStats\API;
 
 use EnderStats\Main;
 use pocketmine\Player;
@@ -26,7 +26,7 @@ class EnderStats {
     public function saveStats(Player $player){
         return (new Config($this->plugin->getDataFolder(). "players/". strtolower($player->getName()). ".yml", Config::YAML))->save();
     }
-  
+    
     public function addPlayer(Player $player){
         return new Config($this->plugin->getDataFolder(). "players/". strtolower($player->getName()). ".yml", Config::YAML, array(
             "playername" => $player->getName(),
