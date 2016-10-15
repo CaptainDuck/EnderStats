@@ -39,25 +39,25 @@ class EnderStats {
     
     public function addKills(Player $player, $kills){
         $current = $this->getStats($player)["kills"];
-        $this->getStats($player) = $current + $kills;
+        $this->getStats($player)->set("kills", $current + $kills);
         $this->saveStats($player);
     }
     
     public function addDeaths(Player $player, $deaths){
         $current = $this->getStats($player)["deaths"];
-        $this->getStats($player) = $current + $deaths;
+        $this->getStats($player)->set("kills", $current + $deaths);
         $this->saveStats($player);
     }
     
     public function addBreaks(Player $player, $breaks){
         $current = $this->getStats($player)["breaks"];
-        $this->getStats($player) = $current + $breaks;
+        $this->getStats($player)->set("kills", $current + $breaks);
         $this->saveStats($player);
     }
     
     public function addPlaces(Player $player, $places){
         $current = $this->getStats($player)["places"];
-        $this->getStats($player) = $current + $places;
+        $this->getStats($player)->set("kills", $current + $places);
         $this->saveStats($player);
     }
 }
