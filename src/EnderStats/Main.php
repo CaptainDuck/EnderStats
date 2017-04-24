@@ -2,8 +2,6 @@
 
 namespace EnderStats;
 
-use EnderStats\API\EnderStats;
-use EnderStats\StatsCommand;
 use pocketmine\event\Listener;
 use pocketmine\plugin\PluginBase;
 use pocketmine\plugin\Plugin;
@@ -15,10 +13,8 @@ use pocketmine\event\entity\EntityDamageEvent;
 use pocketmine\event\entity\EntityDamageByEntityEvent;
 use pocketmine\event\player\PlayerJoinEvent;
 use pocketmine\event\player\PlayerDeathEvent;
-use pocketmine\command\ConsoleCommandSender;
 use pocketmine\command\CommandSender;
 use pocketmine\command\Command;
-use pocketmine\command\Command\Executor;
 use pocketmine\item\Item;
 use pocketmine\utils\TextFormat as C;
 use pocketmine\utils\Config;
@@ -27,14 +23,10 @@ use pocketmine\event\block\BlockBreakEvent;
 
 class Main extends PluginBase implements Listener{
     
-    /**@var EnderStats*/
-    private $enderstats;
-    
     public function onEnable(){
         $this->getLogger()->info("EnderStats by CaptainDuck enabled!");
         $this->getServer()->getPluginManager()->registerEvents(new EventListener($this), $this);
         @mkdir($this->getDataFolder());
-        $this->getCommand("stats")->setExecutor(new StatsCommand($this), $this);
         $this->config = new Config($this->getDataFolder(). "config.yml", Config::YAML, array(
             "EnderStats Config File",
             "#Whether true or false, this disables Break, Place, Kill, and Deaths, it also disables the addition of it.",
@@ -45,18 +37,62 @@ class Main extends PluginBase implements Listener{
         ));
     }
     
-    public function enderStats(){
-        return $this->enderstats;
-    }
-    
     public function onDisable(){
         $this->getLogger()->info("EnderStats by CaptainDuck disabled! :o");
     }
     
     public function onJoin(PlayerJoinEvent $event){
-        if(!$this->enderStats()->playerHasStats($event->getPlayer())){
-            $this->enderStats()->addPlayer($event->getPlayer());
+        if(!$this->playerHasStats($event->getPlayer())){
+            $this->addPlayer($event->getPlayer());
         }
+    }
+    
+    public function playerHasStats(Player $player){
+        return file_exists($this->plugin->getDataFolder(). "players/". strtolower($player->getName()). ".yml");
+    }
+    
+    public function getStats(Player $player){
+        if($this->playerHasStats($player)){
+            return (new Config($this->plugin->getDataFolder(). "players/". strtolower($player->getName()). ".yml", Config::YAML))->getAll();
+        }
+    }
+    
+    public function saveStats(Player $player){
+        return (new Config($this->plugin->getDataFolder(). "players/". strtolower($player->getName()). ".yml", Config::YAML))->save();
+    }
+    
+    public function addPlayer(Player $player){
+        return new Config($this->plugin->getDataFolder(). "players/". strtolower($player->getName()). ".yml", Config::YAML, array(
+            "playername" => $player->getName(),
+            "kills" => "0",
+            "deaths" => "0",
+            "breaks" => "0",
+            "places" => "0"
+        ));
+    }
+    
+    public function addKills(Player $player, $kills){
+        $current = $this->getStats($player)["kills"];
+        $this->getStats($player)->set("kills", $current + $kills);
+        $this->saveStats($player);
+    }
+    
+    public function addDeaths(Player $player, $deaths){
+        $current = $this->getStats($player)["deaths"];
+        $this->getStats($player)->set("deaths", $current + $deaths);
+        $this->saveStats($player);
+    }
+    
+    public function addBreaks(Player $player, $breaks){
+        $current = $this->getStats($player)["breaks"];
+        $this->getStats($player)->set("breaks", $current + $breaks);
+        $this->saveStats($player);
+    }
+    
+    public function addPlaces(Player $player, $places){
+        $current = $this->getStats($player)["places"];
+        $this->getStats($player)->set("places", $current + $places);
+        $this->saveStats($player);
     }
     
     public function onBreak(BlockBreakEvent $event){
@@ -70,17 +106,11 @@ class Main extends PluginBase implements Listener{
         $cause = $event->getLastDamageCause();
         if($this->config->get("Kills") == "true"){
             if($event->$cause->getDamager() instanceof Player){
-                $this->enderStats()->addKills($event->$cause->getDamager(), 1);
+                $this->addKills($event->$cause->getDamager(), 1);
             }
             if($player instanceof Player){
-                $this->enderStats()->getDeaths($player->getName(), 1);
+                $this->addDeaths($player->getName(), 1);
             }
-        }
-    }
-    
-    public function onPlace(BlockPlaceEvent $event){
-        if($this->config->get("Places") == "true"){
-            $this->enderStats()->addPlaces($event->getPlayer(), 1);
         }
     }
 }
